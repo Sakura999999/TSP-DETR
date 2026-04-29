@@ -45,9 +45,9 @@ def get_args_parser():
     parser.add_argument('--lr_backbone', default=1e-5, type=float, 
                         help='learning rate for backbone')
 
-    parser.add_argument('--batch_size', default=2, type=int)
+    parser.add_argument('--batch_size', default=8, type=int)
     parser.add_argument('--weight_decay', default=1e-4, type=float)
-    parser.add_argument('--epochs', default=300, type=int)
+    parser.add_argument('--epochs', default=50, type=int)
     parser.add_argument('--lr_drop', default=200, type=int)
     parser.add_argument('--save_checkpoint_interval', default=100, type=int)
     parser.add_argument('--clip_max_norm', default=0.1, type=float,
@@ -60,9 +60,13 @@ def get_args_parser():
 
     # * Backbone
     parser.add_argument('--backbone', default='resnet50', type=str,
-                        help="Name of the convolutional backbone to use")
+                        help="Name of the convolutional backbone for student model")
+    parser.add_argument('--teacher_backbone', default='resnet50', type=str,
+                        help="Name of the convolutional backbone for teacher model (e.g. resnet101)")
     parser.add_argument('--dilation', action='store_true',
-                        help="If true, we replace stride with dilation in the last convolutional block (DC5)")
+                        help="If true, replace stride with dilation in the last conv block for student backbone (DC5)")
+    parser.add_argument('--teacher_dilation', action='store_true',
+                        help="If true, use DC5 dilation for teacher backbone (e.g. DAB-R101-DC5 pretrained)")
     parser.add_argument('--position_embedding', default='sine', type=str, choices=('sine', 'learned'),
                         help="Type of positional embedding to use on top of the image features")
     parser.add_argument('--pe_temperatureH', default=20, type=int, 
@@ -145,7 +149,7 @@ def get_args_parser():
 
     # dataset parameters
     parser.add_argument('--dataset_file', default='coco')
-    parser.add_argument('--coco_path', type=str, required=True)
+    parser.add_argument('--coco_path', type=str, default='data/coco')
     parser.add_argument('--coco_panoptic_path', type=str)
     parser.add_argument('--remove_difficult', action='store_true')
     parser.add_argument('--fix_size', action='store_true', 
@@ -165,7 +169,7 @@ def get_args_parser():
     parser.add_argument('--start_epoch', default=0, type=int, metavar='N',
                         help='start epoch')
     parser.add_argument('--eval', action='store_true', help="eval only. w/o Training.")
-    parser.add_argument('--num_workers', default=10, type=int)
+    parser.add_argument('--num_workers', default=8, type=int)
     parser.add_argument('--debug', action='store_true', 
                         help="For debug only. It will perform only a few steps during trainig and val.")
     parser.add_argument('--find_unused_params', action='store_true')
@@ -255,10 +259,10 @@ def main(args, _run=None):
     if args.distributed:
         student_model = torch.nn.parallel.DistributedDataParallel(student_model, device_ids=[args.gpu],
                                                                   find_unused_parameters=args.find_unused_params)
-        teacher_model = torch.nn.parallel.DistributedDataParallel(teacher_model, device_ids=[args.gpu],
-                                                                   find_unused_parameters=args.find_unused_params)
+        # teacher_model = torch.nn.parallel.DistributedDataParallel(teacher_model, device_ids=[args.gpu],
+        #                                                            find_unused_parameters=args.find_unused_params)
         student_model_without_ddp = student_model.module
-        teacher_model_without_ddp = teacher_model.module
+        # teacher_model_without_ddp = teacher_model.module
 
     n_parameters = sum(p.numel() for p in student_model.parameters() if p.requires_grad)
     logger.info('number of params:'+str(n_parameters))

@@ -147,7 +147,9 @@ def build_backbone(args, teacher=False):
     #     raise NotImplementedError("Unknown batch norm name: {}".format(args.batch_norm_type))
 
     if teacher:
-        backbone = Backbone('resnet50', train_backbone, return_interm_layers, args.dilation,
+        teacher_backbone = getattr(args, 'teacher_backbone', 'resnet50')
+        teacher_dilation = getattr(args, 'teacher_dilation', False)
+        backbone = Backbone(teacher_backbone, train_backbone, return_interm_layers, teacher_dilation,
                             batch_norm=FrozenBatchNorm2d)
     else:
         backbone = Backbone(args.backbone, train_backbone, return_interm_layers, args.dilation,     
