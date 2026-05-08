@@ -227,9 +227,22 @@ class ResNet(nn.Module):
 def _resnet(arch, block, layers, pretrained, progress, **kwargs):
     model = ResNet(block, layers, **kwargs)
     if pretrained:
-        state_dict = load_state_dict_from_url(model_urls[arch],
-                                              progress=progress)
-        model.load_state_dict(state_dict)
+        import os
+        import glob
+        cache_dir = os.path.expanduser('~/.cache/torch/hub/checkpoints')
+        # Try to find cached file: resnet18-*.pth or resnet18_*.pth
+        cached_files = glob.glob(os.path.join(cache_dir, f'{arch}*.pth'))
+        if cached_files:
+            # Use the first match (usually the latest)
+            cached_file = cached_files[0]
+            state_dict = torch.load(cached_file, map_location='cpu')
+            model.load_state_dict(state_dict)
+            if progress:
+                print(f"[INFO] Loaded {arch} from local cache: {cached_file}")
+        else:
+            # Fallback to download if not cached
+            state_dict = load_state_dict_from_url(model_urls[arch], progress=progress)
+            model.load_state_dict(state_dict)
     return model
 
 

@@ -9,8 +9,8 @@ mAP_all = []  # 总体 mAP
 mAP_50 = []   # mAP@0.50
 
 # 2. 读取 log.txt 文件
-# log_path = 'output/kd_dab_detr_r50/log.txt'  # 请确保路径正确，如果在同级目录直接写 'log.txt'
-log_path = 'output/dota_baseline/log.txt'
+log_path = 'output/dab_detr_r50/log.txt'  # 请确保路径正确，如果在同级目录直接写 'log.txt'
+# log_path = 'output/dota_baseline/log.txt'
 
 try:
     with open(log_path, 'r') as f:
@@ -56,7 +56,7 @@ if mAP_all:
 plt.tight_layout()
 
 # 4. 保存图片
-# save_name = 'training_curve.png'
-save_name = 'training_curve_dota.png'
+save_name = 'training_curve.png'
+# save_name = 'training_curve_dota.png'
 plt.savefig(save_name, dpi=300)
 print(f"图表已成功保存为: {save_name} ！请在 VS Code 中双击打开查看。")

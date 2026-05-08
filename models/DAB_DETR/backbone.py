@@ -107,8 +107,13 @@ class Backbone(BackboneBase):
         #         replace_stride_with_dilation=[False, False, dilation],
         #         pretrained=is_main_process(), norm_layer=batch_norm)
         res_map = {'resnet18': resnet18, 'resnet34': resnet34, 'resnet50': resnet50, 'resnet101': resnet101}
-        backbone = res_map[name](replace_stride_with_dilation=[False, False, dilation],
-            pretrained=is_main_process(), norm_layer=batch_norm)
+        # backbone = res_map[name](replace_stride_with_dilation=[False, False, dilation],
+        #     pretrained=is_main_process(), norm_layer=batch_norm)
+        backbone = res_map[name](
+            replace_stride_with_dilation=[False, False, dilation],
+            pretrained=True,
+            norm_layer=batch_norm
+        )
         if name in ['swin_B_224_22k', 'swin_B_384_22k', 'swin_L_224_22k', 'swin_L_384_22k']:
             imgsize = int(name.split('_')[-2])
             backbone = build_swin_transformer(name, imgsize)

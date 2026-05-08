@@ -187,9 +187,12 @@ def build_kd_DABDETR(args):
         random_refpoints_xy=args.random_refpoints_xy,
         return_weightmap = return_weightmap
     )
-    # teacher_ckpt = torch.load('../../pretrained/dab_res50.pth', map_location='cpu')
-    teacher_ckpt = torch.load(args.pretrain_model_path, map_location='cpu')
-    teacher_model.load_state_dict(teacher_ckpt['model'])
+    # Load teacher from pretrained checkpoint (optional: skip for pure baseline)
+    if args.pretrain_model_path is not None:
+        teacher_ckpt = torch.load(args.pretrain_model_path, map_location='cpu')
+        teacher_model.load_state_dict(teacher_ckpt['model'])
+    else:
+        print("[INFO] pretrain_model_path is None. Teacher model is initialized randomly (baseline mode).")
 
     aux_refpoints = teacher_model.refpoint_embed.weight if args.aux_refpoints else None
 

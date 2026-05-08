@@ -326,24 +326,32 @@ def main(args, _run=None):
             lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
             args.start_epoch = checkpoint['epoch'] + 1
 
+    # if not args.resume and args.pretrain_model_path:
+    #     checkpoint = torch.load(args.pretrain_model_path, map_location='cpu')['model']
+    #     from collections import OrderedDict
+    #     _ignorekeywordlist = args.finetune_ignore if args.finetune_ignore else []
+    #     ignorelist = []
+
+    #     def check_keep(keyname, ignorekeywordlist):
+    #         for keyword in ignorekeywordlist:
+    #             if keyword in keyname:
+    #                 ignorelist.append(keyname)
+    #                 return False
+    #         return True
+
+    #     logger.info("Ignore keys: {}".format(json.dumps(ignorelist, indent=2)))
+    #     _tmp_st = OrderedDict({k:v for k, v in clean_state_dict(checkpoint).items() if check_keep(k, _ignorekeywordlist)})
+    #     _load_output = student_model_without_ddp.load_state_dict(_tmp_st, strict=False)
+    #     logger.info(str(_load_output))
+    
+    # In KD training, args.pretrain_model_path is used to load the teacher model
+    # inside build_kd_DABDETR(args). Do not load the same checkpoint into student,
+    # especially when teacher and student have different backbones, e.g. R50 -> R18.
     if not args.resume and args.pretrain_model_path:
-        checkpoint = torch.load(args.pretrain_model_path, map_location='cpu')['model']
-        from collections import OrderedDict
-        _ignorekeywordlist = args.finetune_ignore if args.finetune_ignore else []
-        ignorelist = []
-
-        def check_keep(keyname, ignorekeywordlist):
-            for keyword in ignorekeywordlist:
-                if keyword in keyname:
-                    ignorelist.append(keyname)
-                    return False
-            return True
-
-        logger.info("Ignore keys: {}".format(json.dumps(ignorelist, indent=2)))
-        _tmp_st = OrderedDict({k:v for k, v in clean_state_dict(checkpoint).items() if check_keep(k, _ignorekeywordlist)})
-        _load_output = student_model_without_ddp.load_state_dict(_tmp_st, strict=False)
-        logger.info(str(_load_output))
-
+        logger.info(
+            "KD training: skip loading pretrain_model_path into student. "
+            "pretrain_model_path is used for teacher only."
+    )
 
     if args.eval:
         os.environ['EVAL_FLAG'] = 'TRUE'
